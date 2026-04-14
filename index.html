@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量條碼產生器</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+    body { 
+        font-family: sans-serif; 
+        background: #f0f0f0; /* 背景改淺灰色，更突出中間的容器 */
+        margin: 0; 
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+    
+    header { 
+        background: #333; 
+        color: white; 
+        padding: 1rem; 
+        text-align: center; 
+        flex-shrink: 0;
+    }
+
+    /* 關鍵修改：限制寬度並置中 */
+    .main-container { 
+        display: flex; 
+        width: 100%;
+        max-width: 1000px; /* 限制寬度 */
+        margin: 20px auto; /* 上下留白，左右置中 */
+        background: white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        flex: 1; 
+        overflow: hidden; 
+    }
+    
+    /* 左側輸入區 */
+    .input-panel { 
+        width: 250px; /* 固定左側寬度 */
+        padding: 10px 20px 20px 20px; 
+        border-right: 1px solid #ccc; 
+        display: flex; 
+        flex-direction: column; 
+    }
+    textarea { 
+        flex: 1; 
+        padding: 10px; 
+        font-size: 14px; 
+        resize: none; 
+        border: 1px solid #ddd;
+    }
+    
+    /* 右側顯示區：支援水平與垂直捲動 */
+    .output-panel { 
+        flex: 1; 
+        padding: 20px; 
+        overflow-y: auto; /* 垂直捲動 */
+        overflow-x: auto; /* 水平捲動 */
+        display: flex; 
+        flex-direction: column; /* 讓條碼垂直整行排列 */
+        gap: 15px; 
+        background: #fff; 
+    }
+
+    /* 條碼單元格：確保不會縮小，並維持寬度以觸發捲動 */
+    .barcode-item { 
+        flex-shrink: 0; 
+        padding: 15px; 
+        border: 1px solid #eee; 
+        text-align: center; 
+        min-width: fit-content; /* 確保條碼完整顯示不被擠壓 */
+    }
+</style>
+</head>
+<body>
+
+<header><h2>批量條碼產生器</h2></header>
+
+<div class="main-container">
+    <div class="input-panel">
+        <textarea id="barcodeInput" placeholder="請輸入內容 (每行一個)" spellcheck="false"></textarea>
+    </div>
+    <div class="output-panel" id="barcodeContainer">
+        </div>
+</div>
+
+<script>
+    const input = document.getElementById('barcodeInput');
+    const container = document.getElementById('barcodeContainer');
+
+    // 監聽輸入框的 input 事件，達成即時生成
+    input.addEventListener('input', () => {
+        generateBarcodes();
+    });
+
+    function generateBarcodes() {
+        // 1. 清空目前的條碼容器
+        container.innerHTML = '';
+        
+        // 2. 獲取數值並根據換行切割成陣列，過濾掉空行
+        const values = input.value.split('\n').filter(val => val.trim() !== '');
+
+        // 3. 遍歷每一個值並生成條碼
+        values.forEach((value, index) => {
+            // 建立一個包裝容器
+            const wrapper = document.createElement('div');
+            wrapper.className = 'barcode-item';
+            
+            // 建立 svg 元素供 JsBarcode 繪製
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.id = `barcode-${index}`;
+            
+            wrapper.appendChild(svg);
+            container.appendChild(wrapper);
+
+            // 調用 JsBarcode 函式庫
+            try {
+                JsBarcode(`#barcode-${index}`, value, {
+                    format: "CODE128",
+                    lineColor: "#000",
+                    width: 2,
+                    height: 60,
+                    displayValue: true // 是否在條碼下方顯示文字
+                });
+            } catch (e) {
+                console.error("生成錯誤:", e);
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
