@@ -110,42 +110,46 @@
     });
 
     function generateBarcodes() {
-        // 1. 獲取數值並過濾
-        const values = input.value.split('\n').filter(val => val.trim() !== '');
+    // 1. 獲取數值並過濾
+    const values = input.value.split('\n').filter(val => val.trim() !== '');
 
-        // 2. 更新總數顯示 (尋找剛才建立的 counter 元素)
-        const counter = document.getElementById('counter');
-        counter.innerText = `條碼總數：${values.length}`;
+    // 2. 更新總數顯示 (尋找剛才建立的 counter 元素)
+    const counter = document.getElementById('counter');
+    counter.innerText = `條碼總數：${values.length}`;
 
-        // 3. 清空容器（注意：保留 counter，只清除之後的內容）
-        // 技巧：移除除了第一個元素(counter)以外的所有子節點
-        while (container.childNodes.length > 2) { 
-            container.removeChild(container.lastChild);
-        }
-
-        // 4. 遍歷生成條碼...
-        values.forEach((value, index) => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'barcode-item';
-            
-            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svg.id = `barcode-${index}`;
-            
-            wrapper.appendChild(svg);
-            container.appendChild(wrapper);
-
-            try {
-                JsBarcode(`#barcode-${index}`, value, {
-                    format: "CODE128",
-                    width: 2,
-                    height: 60,
-                    displayValue: true
-                });
-            } catch (e) {
-                console.error("生成錯誤:", e);
-            }
-        });
+    // 3. 清空容器（注意：保留 counter，只清除之後的內容）
+    // 技巧：移除除了第一個元素(counter)以外的所有子節點
+    while (container.childNodes.length > 2) { 
+        container.removeChild(container.lastChild);
     }
+    // 或者更簡單的做法：
+    // container.innerHTML = ''; 
+    // container.appendChild(counter); // 把 counter 加回去
+
+    // 4. 遍歷生成條碼...
+    values.forEach((value, index) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'barcode-item';
+        
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.id = `barcode-${index}`;
+        
+        wrapper.appendChild(svg);
+        container.appendChild(wrapper);
+
+        try {
+            JsBarcode(`#barcode-${index}`, value, {
+                format: "CODE128",
+                width: 2,
+                height: 60,
+                displayValue: true
+            });
+        } catch (e) {
+            console.error("生成錯誤:", e);
+        }
+    });
+}
+
 
 </script>
 
