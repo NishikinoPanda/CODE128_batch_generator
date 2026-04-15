@@ -67,22 +67,24 @@
     .counter-badge {
         position: sticky;
         top: 0;
+        background-color: #ffffff;
         
-        /* 關鍵修改：確保背景是不透明的白色 */
-        background-color: #ffffff; 
+        /* 修改：確保上方、左右都完全貼齊父容器邊界 */
+        /* margin 的順序是：上 右 下 左 */
+        margin: -20px -20px 15px -20px; 
+        padding: 15px 20px;
         
-        /* 增加外距與內距，確保遮蓋範圍足夠 */
-        margin: -20px -20px 15px -20px; /* 抵銷掉父層 padding，讓遮罩貼齊邊框 */
-        padding: 15px 20px; 
-        
-        /* 裝飾：加入更明顯的底線或陰影來區隔條碼區 */
         border-bottom: 2px solid #333;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* 稍微增加陰影讓層次更分明 */
         
         font-weight: bold;
         font-size: 1.1rem;
-        z-index: 100; /* 確保層級夠高 */
+        z-index: 100;
         color: #333;
+
+        /* 新增：如果外框有圓角，確保遮罩上方也有圓角以免溢出 */
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
     }
 
     /* 條碼單元格：確保不會縮小，並維持寬度以觸發捲動 */
@@ -118,23 +120,17 @@
     });
 
     function generateBarcodes() {
-    // 1. 獲取數值並過濾
     const values = input.value.split('\n').filter(val => val.trim() !== '');
-
-    // 2. 更新總數顯示 (尋找剛才建立的 counter 元素)
     const counter = document.getElementById('counter');
     counter.innerText = `條碼總數：${values.length}`;
 
-    // 3. 清空容器（注意：保留 counter，只清除之後的內容）
-    // 技巧：移除除了第一個元素(counter)以外的所有子節點
-    while (container.childNodes.length > 2) { 
-        container.removeChild(container.lastChild);
-    }
-    // 或者更簡單的做法：
-    // container.innerHTML = ''; 
-    // container.appendChild(counter); // 把 counter 加回去
+    // 1. 完全清空容器
+    container.innerHTML = ''; 
+    
+    // 2. 先把 counter 加進去 (它會變成第一個子元素，位於最上方)
+    container.appendChild(counter);
 
-    // 4. 遍歷生成條碼...
+    // 3. 接著才生成條碼
     values.forEach((value, index) => {
         const wrapper = document.createElement('div');
         wrapper.className = 'barcode-item';
@@ -157,6 +153,7 @@
         }
     });
 }
+
 
 
 </script>
