@@ -64,6 +64,19 @@
         background: #fff; 
     }
 
+    .counter-badge {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        padding: 10px;
+        border-bottom: 2px solid #333;
+        font-weight: bold;
+        font-size: 1.1rem;
+        z-index: 10; /* 確保在條碼上方 */
+        margin-bottom: 10px;
+        color: #333;
+    }
+
     /* 條碼單元格：確保不會縮小，並維持寬度以觸發捲動 */
     .barcode-item { 
         flex-shrink: 0; 
@@ -83,7 +96,8 @@
         <textarea id="barcodeInput" placeholder="請輸入內容 (每行一個)" spellcheck="false"></textarea>
     </div>
     <div class="output-panel" id="barcodeContainer">
-        </div>
+        <div id="counter" class="counter-badge">目前條碼數量：0</div>
+    </div>
 </div>
 
 <script>
@@ -96,39 +110,43 @@
     });
 
     function generateBarcodes() {
-        // 1. 清空目前的條碼容器
-        container.innerHTML = '';
-        
-        // 2. 獲取數值並根據換行切割成陣列，過濾掉空行
+        // 1. 獲取數值並過濾
         const values = input.value.split('\n').filter(val => val.trim() !== '');
 
-        // 3. 遍歷每一個值並生成條碼
+        // 2. 更新總數顯示 (尋找剛才建立的 counter 元素)
+        const counter = document.getElementById('counter');
+        counter.innerText = `條碼總數：${values.length}`;
+
+        // 3. 清空容器（注意：保留 counter，只清除之後的內容）
+        // 技巧：移除除了第一個元素(counter)以外的所有子節點
+        while (container.childNodes.length > 2) { 
+            container.removeChild(container.lastChild);
+        }
+
+        // 4. 遍歷生成條碼...
         values.forEach((value, index) => {
-            // 建立一個包裝容器
             const wrapper = document.createElement('div');
             wrapper.className = 'barcode-item';
             
-            // 建立 svg 元素供 JsBarcode 繪製
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.id = `barcode-${index}`;
             
             wrapper.appendChild(svg);
             container.appendChild(wrapper);
 
-            // 調用 JsBarcode 函式庫
             try {
                 JsBarcode(`#barcode-${index}`, value, {
                     format: "CODE128",
-                    lineColor: "#000",
                     width: 2,
                     height: 60,
-                    displayValue: true // 是否在條碼下方顯示文字
+                    displayValue: true
                 });
             } catch (e) {
                 console.error("生成錯誤:", e);
             }
         });
     }
+
 </script>
 
 </body>
