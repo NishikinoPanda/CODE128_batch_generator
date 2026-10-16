@@ -6,157 +6,320 @@
     <title>批量條碼產生器</title>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <style>
-    body { 
-        font-family: sans-serif; 
-        background: #f0f0f0; /* 背景改淺灰色，更突出中間的容器 */
-        margin: 0; 
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-    }
-    
-    header { 
-        background: #333; 
-        color: white; 
-        padding: 1rem; 
-        text-align: center; 
-        flex-shrink: 0;
-    }
+        * {
+            box-sizing: border-box;
+        }
 
-    /* 關鍵修改：限制寬度並置中 */
-    .main-container { 
-        display: flex; 
-        width: 100%;
-        max-width: 1000px; /* 限制寬度 */
-        margin: 20px auto; /* 上下留白，左右置中 */
-        background: white;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        border-radius: 8px;
-        flex: 1; 
-        overflow: hidden; 
-    }
-    
-    /* 左側輸入區 */
-    .input-panel { 
-        width: 250px; /* 固定左側寬度 */
-        padding: 10px 20px 20px 20px; 
-        border-right: 1px solid #ccc; 
-        display: flex; 
-        flex-direction: column; 
-    }
-    textarea { 
-        flex: 1; 
-        padding: 10px; 
-        font-size: 14px; 
-        resize: none; 
-        border: 1px solid #ddd;
-    }
-    
-    /* 右側顯示區：支援水平與垂直捲動 */
-    .output-panel { 
-        flex: 1; 
-        padding: 20px; 
-        overflow-y: auto; /* 垂直捲動 */
-        overflow-x: auto; /* 水平捲動 */
-        display: flex; 
-        flex-direction: column; /* 讓條碼垂直整行排列 */
-        gap: 15px; 
-        background: #fff; 
-    }
+        :root {
+            --page-bg: #f3f4f6;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --accent: #334155;
+            --accent-strong: #1f2937;
+        }
 
-    .counter-badge {
-        position: sticky;
-        top: 0;
-        background-color: #ffffff;
-        
-        /* 修改：確保上方、左右都完全貼齊父容器邊界 */
-        /* margin 的順序是：上 右 下 左 */
-        margin: -20px -20px 15px -20px; 
-        padding: 15px 20px;
-        
-        border-bottom: 2px solid #333;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* 稍微增加陰影讓層次更分明 */
-        
-        font-weight: bold;
-        font-size: 1.1rem;
-        z-index: 100;
-        color: #333;
+        html,
+        body {
+            margin: 0;
+            min-height: 100%;
+        }
 
-        /* 新增：如果外框有圓角，確保遮罩上方也有圓角以免溢出 */
-        border-top-left-radius: 8px;
-        border-top-right-radius: 8px;
-    }
+        body {
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--page-bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+        }
 
-    /* 條碼單元格：確保不會縮小，並維持寬度以觸發捲動 */
-    .barcode-item { 
-        flex-shrink: 0; 
-        padding: 15px; 
-        border: 1px solid #eee; 
-        text-align: center; 
-        min-width: fit-content; /* 確保條碼完整顯示不被擠壓 */
-    }
-</style>
+        header {
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #30343b, #25282d);
+            color: #fff;
+            padding: 22px 24px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        header h2 {
+            margin: 0;
+            font-size: clamp(1.25rem, 2vw, 1.6rem);
+            letter-spacing: 0.04em;
+        }
+
+        .page-shell {
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            padding: clamp(12px, 2vw, 24px);
+            display: flex;
+            justify-content: center;
+        }
+
+        .main-container {
+            width: min(1180px, 100%);
+            min-height: 0;
+            display: grid;
+            grid-template-columns: clamp(230px, 28vw, 320px) minmax(0, 1fr);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        .input-panel {
+            min-width: 0;
+            padding: 18px;
+            border-right: 1px solid var(--border);
+            background: var(--surface-soft);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .panel-title {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-strong);
+        }
+
+        .panel-hint {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        textarea {
+            width: 100%;
+            flex: 1;
+            min-height: 260px;
+            padding: 12px;
+            resize: none;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: #fff;
+            color: var(--text);
+            font: inherit;
+            font-size: 14px;
+            line-height: 1.6;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        textarea:focus {
+            border-color: #64748b;
+            box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.14);
+        }
+
+        .output-panel {
+            min-width: 0;
+            min-height: 0;
+            overflow: auto;
+            background: #fff;
+            position: relative;
+        }
+
+        .counter-badge {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            margin: 0;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.98);
+            border-bottom: 2px solid var(--accent-strong);
+            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.07);
+            font-weight: 700;
+            color: var(--accent-strong);
+            backdrop-filter: blur(4px);
+        }
+
+        .barcode-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px 18px 20px;
+        }
+
+        .empty-state {
+            min-height: 220px;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .barcode-item {
+            display: grid;
+            grid-template-columns: 58px minmax(0, 1fr);
+            align-items: center;
+            min-width: min-content;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .barcode-index {
+            align-self: stretch;
+            display: grid;
+            place-items: center;
+            padding: 12px 8px;
+            background: var(--surface-soft);
+            border-right: 1px solid var(--border);
+            color: #475569;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .barcode-content {
+            min-width: max-content;
+            padding: 16px 20px;
+            text-align: center;
+        }
+
+        .barcode-content svg {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .barcode-error {
+            color: #b91c1c;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        @media (max-width: 760px) {
+            .page-shell {
+                padding: 10px;
+            }
+
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto minmax(0, 1fr);
+            }
+
+            .input-panel {
+                border-right: 0;
+                border-bottom: 1px solid var(--border);
+            }
+
+            textarea {
+                min-height: 150px;
+                max-height: 220px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            header {
+                padding: 16px;
+            }
+
+            .barcode-item {
+                grid-template-columns: 46px minmax(0, 1fr);
+            }
+
+            .barcode-list {
+                padding: 12px;
+            }
+
+            .barcode-content {
+                padding: 14px 12px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <header>
+        <h2>批量條碼產生器</h2>
+    </header>
 
-<header><h2>批量條碼產生器</h2></header>
+    <main class="page-shell">
+        <div class="main-container">
+            <section class="input-panel">
+                <p class="panel-title">輸入內容</p>
+                <p class="panel-hint">每行輸入一筆資料，條碼會即時產生。</p>
+                <textarea id="barcodeInput" placeholder="請輸入內容（每行一個）" spellcheck="false"></textarea>
+            </section>
 
-<div class="main-container">
-    <div class="input-panel">
-        <textarea id="barcodeInput" placeholder="請輸入內容 (每行一個)" spellcheck="false"></textarea>
-    </div>
-    <div class="output-panel" id="barcodeContainer">
-        <div id="counter" class="counter-badge">目前條碼數量：0</div>
-    </div>
-</div>
+            <section class="output-panel" id="barcodeContainer">
+                <div id="counter" class="counter-badge">條碼總數：0</div>
+                <div id="barcodeList" class="barcode-list">
+                    <div id="emptyState" class="empty-state">尚未輸入資料</div>
+                </div>
+            </section>
+        </div>
+    </main>
 
-<script>
-    const input = document.getElementById('barcodeInput');
-    const container = document.getElementById('barcodeContainer');
+    <script>
+        const input = document.getElementById('barcodeInput');
+        const counter = document.getElementById('counter');
+        const barcodeList = document.getElementById('barcodeList');
 
-    // 監聽輸入框的 input 事件，達成即時生成
-    input.addEventListener('input', () => {
-        generateBarcodes();
-    });
+        input.addEventListener('input', generateBarcodes);
 
-    function generateBarcodes() {
-    const values = input.value.split('\n').filter(val => val.trim() !== '');
-    const counter = document.getElementById('counter');
-    counter.innerText = `條碼總數：${values.length}`;
+        function generateBarcodes() {
+            const values = input.value
+                .split('\n')
+                .map(value => value.trim())
+                .filter(value => value !== '');
 
-    // 1. 完全清空容器
-    container.innerHTML = ''; 
-    
-    // 2. 先把 counter 加進去 (它會變成第一個子元素，位於最上方)
-    container.appendChild(counter);
+            counter.textContent = `條碼總數：${values.length}`;
+            barcodeList.innerHTML = '';
 
-    // 3. 接著才生成條碼
-    values.forEach((value, index) => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'barcode-item';
-        
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.id = `barcode-${index}`;
-        
-        wrapper.appendChild(svg);
-        container.appendChild(wrapper);
+            if (values.length === 0) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.textContent = '尚未輸入資料';
+                barcodeList.appendChild(emptyState);
+                return;
+            }
 
-        try {
-            JsBarcode(`#barcode-${index}`, value, {
-                format: "CODE128",
-                width: 2,
-                height: 60,
-                displayValue: true
+            values.forEach((value, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'barcode-item';
+
+                const number = document.createElement('div');
+                number.className = 'barcode-index';
+                number.textContent = index + 1;
+
+                const content = document.createElement('div');
+                content.className = 'barcode-content';
+
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                const barcodeId = `barcode-${index}`;
+                svg.id = barcodeId;
+
+                content.appendChild(svg);
+                wrapper.appendChild(number);
+                wrapper.appendChild(content);
+                barcodeList.appendChild(wrapper);
+
+                try {
+                    JsBarcode(`#${barcodeId}`, value, {
+                        format: 'CODE128',
+                        width: 2,
+                        height: 60,
+                        displayValue: true,
+                        margin: 0
+                    });
+                } catch (error) {
+                    console.error('生成錯誤:', error);
+                    content.innerHTML = '';
+
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'barcode-error';
+                    errorMessage.textContent = `無法生成：${value}`;
+                    content.appendChild(errorMessage);
+                }
             });
-        } catch (e) {
-            console.error("生成錯誤:", e);
         }
-    });
-}
-
-
-
-</script>
-
+    </script>
 </body>
 </html>
